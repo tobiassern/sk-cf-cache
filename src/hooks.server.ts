@@ -8,11 +8,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const cacheUrl = new URL(event.url);
+	cacheUrl.searchParams.delete('cf_revalidate');
 	const cf_revalidate = event.url.searchParams.get('cf_revalidate');
 
 	let response = await cache.match(cacheUrl);
+	if (cf_revalidate) {
+		console.log(`Revalidating for request url: ${cacheUrl}. Fetching and caching request.`);
 
-	if (!response || cf_revalidate) {
+		response = await resolve(event);
+		response.headers.append('Cache-Control', 's-maxage=60');
+
+		event.platform?.context.waitUntil(cache.put(cacheUrl, response.clone()));
+	} else if (!response) {
 		console.log(
 			`Response for request url: ${cacheUrl} not present in cache. Fetching and caching request.`
 		);
