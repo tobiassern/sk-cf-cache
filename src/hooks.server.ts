@@ -2,12 +2,17 @@ import { error, type Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const cache = event.platform?.caches.default;
-	const cacheUrl = new URL(event.url);
+	if (!cache) {
+		console.log("Cachces doesn't exist on platform");
+		return await resolve(event);
+	}
 
-	if (!cache) error(400);
+	const cacheUrl = new URL(event.url);
+	const cf_revalidate = event.url.searchParams.get('cf_revalidate');
+
 	let response = await cache.match(cacheUrl);
 
-	if (!response) {
+	if (!response || cf_revalidate) {
 		console.log(
 			`Response for request url: ${cacheUrl} not present in cache. Fetching and caching request.`
 		);
