@@ -12,19 +12,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		const cacheUrl = new URL(event.url);
 		cacheUrl.searchParams.delete('cf_revalidate');
-		console.log('## CACHE URL: ## ', cacheUrl.pathname);
 
-		let response = await cache.match(cacheUrl.pathname);
+		let response = await cache.match(cacheUrl.href);
 		if (!response) {
 			console.log(
-				`Response for request url: ${cacheUrl} not present in cache. Fetching and caching request.`
+				`Response for request url: ${cacheUrl.href} not present in cache. Fetching and caching request.`
 			);
 			response = await resolve(event);
 			response.headers.append('Cache-Control', 's-maxage=60');
 
-			event.platform?.context.waitUntil(cache.put(cacheUrl, response.clone()));
+			event.platform?.context.waitUntil(cache.put(cacheUrl.href, response.clone()));
 		} else {
-			console.log(`Cache hit for: ${cacheUrl}.`);
+			console.log(`Cache hit for: ${cacheUrl.href}.`);
 		}
 		return response;
 	}
