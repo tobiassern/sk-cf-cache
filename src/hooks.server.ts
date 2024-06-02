@@ -9,6 +9,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const cacheUrl = new URL(event.url);
 	cacheUrl.searchParams.delete('cf_revalidate');
+	console.log('## CACHE URL: ## ', cacheUrl);
 	const cf_revalidate = event.url.searchParams.get('cf_revalidate');
 
 	let response = await cache.match(cacheUrl);
